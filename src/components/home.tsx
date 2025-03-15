@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { ArrowRight, Search } from "lucide-react";
 import Header from "./layout/Header";
 import Footer from "./layout/Footer";
+import { useEffect } from "react";
 import HeroSection from "./home/HeroSection";
 import CourseGrid from "./courses/CourseGrid";
 import StatisticsSection from "./home/StatisticsSection";
@@ -130,6 +131,11 @@ const CallToAction = () => {
 };
 
 const Home = () => {
+  useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />

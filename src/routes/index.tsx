@@ -30,6 +30,10 @@ const AppRoutes = () => {
     <AnimatePresence mode="wait">
       <Suspense fallback={<LoadingScreen />}>
         <Routes location={location} key={location.pathname}>
+          {/* Add tempo routes before the catchall route */}
+          {import.meta.env.VITE_TEMPO === "true" && (
+            <Route path="/tempobook/*" element={<div />} />
+          )}
           {/* Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/courses" element={<Courses />} />

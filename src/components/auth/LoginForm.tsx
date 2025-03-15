@@ -70,13 +70,17 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg"
+      className="w-full max-w-md mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
-        <p className="text-gray-600 mt-2">Sign in to your EduPress account</p>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Welcome back
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
+          Sign in to your EduPress account
+        </p>
         {error && (
-          <div className="mt-4 p-2 bg-red-50 text-red-600 rounded-md text-sm">
+          <div className="mt-4 p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-md text-sm">
             {error}
           </div>
         )}
@@ -165,7 +169,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
           </LoadingButton>
 
           <div className="text-center mt-6">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Don't have an account?{" "}
               <Link
                 to="/signup"

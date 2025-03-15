@@ -12,4 +12,13 @@ export interface User {
   avatar?: string;
   createdAt: string;
   lastLogin?: string;
+  emailVerified: boolean;
+  bio?: string;
+  website?: string;
+  location?: string;
+  socialLinks?: {
+    twitter?: string;
+    linkedin?: string;
+    github?: string;
+  };
 }
