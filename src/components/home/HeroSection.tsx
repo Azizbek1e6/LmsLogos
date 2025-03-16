@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
@@ -20,8 +21,17 @@ interface CategoryProps {
 }
 
 const Category = ({ icon, name, count = 42 }: CategoryProps) => {
+  const navigate = useNavigate();
+
+  const handleCategoryClick = () => {
+    navigate(`/courses?category=${encodeURIComponent(name)}`);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer">
+    <div
+      className="flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+      onClick={handleCategoryClick}
+    >
       <div className="p-3 bg-primary/10 rounded-full mb-3">{icon}</div>
       <h3 className="font-medium text-sm">{name}</h3>
       <p className="text-xs text-muted-foreground">{count} courses</p>
@@ -78,6 +88,16 @@ const HeroSection = ({
     },
   ],
 }: HeroSectionProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/courses?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return (
     <section className="relative w-full h-[600px] bg-background">
       {/* Background with overlay */}
@@ -99,22 +119,27 @@ const HeroSection = ({
         <p className="text-lg text-white/90 mb-8 max-w-2xl">{subtitle}</p>
 
         {/* Search bar */}
-        <div className="w-full max-w-2xl flex mb-12">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="w-full max-w-2xl flex mb-12"
+        >
           <div className="relative w-full">
             <Input
               type="text"
               placeholder="Search for courses, skills or subjects..."
               className="pl-10 py-6 rounded-r-none bg-white/95 border-0 text-black"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
               size={20}
             />
           </div>
-          <Button size="lg" className="rounded-l-none px-8">
+          <Button type="submit" size="lg" className="rounded-l-none px-8">
             Search
           </Button>
-        </div>
+        </form>
 
         {/* Categories */}
         <div className="w-full">

@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import LoadingSpinner from "../ui/loading-spinner";
 
 interface LoadingScreenProps {
   message?: string;
@@ -14,7 +15,7 @@ const LoadingScreen = ({ message = "Loading..." }: LoadingScreenProps) => {
         transition={{ duration: 0.3 }}
         className="flex flex-col items-center space-y-4"
       >
-        <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+        <LoadingSpinner size="4em" color="hsl(var(--primary))" />
         <p className="text-lg font-medium text-primary">{message}</p>
       </motion.div>
     </div>
