@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, UserRole } from "@/types/user";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -24,40 +25,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demonstration
-const mockUsers: User[] = [
-  {
-    id: "1",
-    email: "admin@edupress.com",
-    fullName: "Admin User",
-    role: UserRole.ADMIN,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=admin",
-    createdAt: new Date().toISOString(),
-    lastLogin: new Date().toISOString(),
-    emailVerified: true,
-  },
-  {
-    id: "2",
-    email: "teacher@edupress.com",
-    fullName: "Teacher User",
-    role: UserRole.TEACHER,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=teacher",
-    createdAt: new Date().toISOString(),
-    lastLogin: new Date().toISOString(),
-    emailVerified: true,
-  },
-  {
-    id: "3",
-    email: "student@edupress.com",
-    fullName: "Student User",
-    role: UserRole.STUDENT,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=student",
-    createdAt: new Date().toISOString(),
-    lastLogin: new Date().toISOString(),
-    emailVerified: true,
-  },
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -66,55 +33,111 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem("edupress_user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
+    // Check for current Supabase session
+    const checkSession = async () => {
+      setIsLoading(true);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session) {
+          // Get user profile from profiles table
+          const { data: profile, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("user_id", session.user.id)
+            .single();
+
+          if (error) throw error;
+
+          if (profile) {
+            const userData: User = {
+              id: session.user.id,
+              email: session.user.email || "",
+              fullName: profile.full_name,
+              role: profile.role as UserRole,
+              avatar: profile.avatar_url,
+              createdAt: profile.created_at,
+              lastLogin: new Date().toISOString(),
+              emailVerified: session.user.email_confirmed_at ? true : false,
+              bio: profile.bio || undefined,
+              website: profile.website || undefined,
+              location: profile.location || undefined,
+            };
+            setUser(userData);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Set up auth state change listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        // Get user profile
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (!error && profile) {
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || "",
+            fullName: profile.full_name,
+            role: profile.role as UserRole,
+            avatar: profile.avatar_url,
+            createdAt: profile.created_at,
+            lastLogin: new Date().toISOString(),
+            emailVerified: session.user.email_confirmed_at ? true : false,
+            bio: profile.bio || undefined,
+            website: profile.website || undefined,
+            location: profile.location || undefined,
+          };
+          setUser(userData);
+        }
+      } else if (event === "SIGNED_OUT") {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Find user with matching email
-      const foundUser = mockUsers.find((u) => u.email === email);
-
-      if (!foundUser) {
-        throw new Error("Invalid credentials");
-      }
-
-      // In a real app, you would verify the password here
-      // For demo purposes, we'll just accept any password
-
-      // Check if email is verified
-      if (!foundUser.emailVerified) {
-        toast({
-          title: "Email not verified",
-          description: "Please verify your email before logging in",
-          variant: "destructive",
-        });
-        throw new Error("Email not verified");
-      }
-
-      // Update last login
-      const updatedUser = {
-        ...foundUser,
-        lastLogin: new Date().toISOString(),
-      };
-
-      setUser(updatedUser);
-      localStorage.setItem("edupress_user", JSON.stringify(updatedUser));
-
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${updatedUser.fullName}!`,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-    } catch (error) {
+
+      if (error) throw error;
+
+      if (data.user) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+      }
+    } catch (error: any) {
       console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: error.message || "Failed to login",
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -129,85 +152,109 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Check if user already exists
-      if (mockUsers.some((u) => u.email === email)) {
-        throw new Error("User already exists");
-      }
-
-      // Create new user
-      const newUser: User = {
-        id: String(mockUsers.length + 1),
+      // 1. Sign up the user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
-        fullName,
-        role,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString(),
-        emailVerified: true, // In a real app, this would be false until verified
-      };
-
-      // In a real app, you would save this to your database
-      mockUsers.push(newUser);
-
-      setUser(newUser);
-      localStorage.setItem("edupress_user", JSON.stringify(newUser));
-
-      toast({
-        title: "Account created",
-        description: "Your account has been created successfully!",
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            role: role,
+          },
+        },
       });
 
-      // In a real app, you would send a verification email here
-    } catch (error) {
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // 2. Create a profile record in the profiles table
+        const { error: profileError } = await supabase.from("profiles").insert({
+          user_id: authData.user.id,
+          full_name: fullName,
+          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+          role: role,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+        if (profileError) throw profileError;
+
+        toast({
+          title: "Account created",
+          description: "Your account has been created successfully!",
+        });
+      }
+    } catch (error: any) {
       console.error("Signup error:", error);
+      toast({
+        title: "Signup failed",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("edupress_user");
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout failed",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
   };
 
   const updateProfile = async (data: Partial<User>) => {
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       if (!user) {
         throw new Error("No user logged in");
       }
 
+      // Update profile in Supabase
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: data.fullName,
+          bio: data.bio,
+          website: data.website,
+          location: data.location,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      // Update local user state
       const updatedUser = {
         ...user,
         ...data,
       };
 
-      // Update in mock database
-      const userIndex = mockUsers.findIndex((u) => u.id === user.id);
-      if (userIndex !== -1) {
-        mockUsers[userIndex] = updatedUser;
-      }
-
       setUser(updatedUser);
-      localStorage.setItem("edupress_user", JSON.stringify(updatedUser));
 
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Update profile error:", error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -217,30 +264,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const resetPassword = async (email: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
 
-      const foundUser = mockUsers.find((u) => u.email === email);
+      if (error) throw error;
 
-      if (!foundUser) {
-        // For security reasons, don't reveal if the email exists or not
-        toast({
-          title: "Password reset email sent",
-          description:
-            "If an account with that email exists, we've sent instructions to reset your password",
-        });
-        return;
-      }
-
-      // In a real app, you would send a password reset email here
       toast({
         title: "Password reset email sent",
         description:
-          "We've sent instructions to reset your password to your email",
+          "If an account with that email exists, we've sent instructions to reset your password",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Reset password error:", error);
-      throw error;
+      // Don't show error to user for security reasons
+      toast({
+        title: "Password reset email sent",
+        description:
+          "If an account with that email exists, we've sent instructions to reset your password",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -249,25 +291,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const verifyEmail = async (token: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // In a real app, you would verify the token and update the user's email verification status
+      // In a real app with Supabase, email verification is handled automatically
+      // This function would be used for custom verification flows
       toast({
         title: "Email verified",
         description: "Your email has been verified successfully",
       });
-
-      // If the user is logged in, update their status
-      if (user) {
-        const updatedUser = {
-          ...user,
-          emailVerified: true,
-        };
-
-        setUser(updatedUser);
-        localStorage.setItem("edupress_user", JSON.stringify(updatedUser));
-      }
     } catch (error) {
       console.error("Verify email error:", error);
       throw error;

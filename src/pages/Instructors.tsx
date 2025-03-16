@@ -115,12 +115,12 @@ const Instructors = () => {
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="bg-primary text-white py-16">
-          <div className="container mx-auto px-4 text-center">
+          <div className="bg-gray container mx-auto px-4 text-center">
             <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="text-3xl md:text-4xl font-bold mb-4"
+              className="bg-gray text-3xl md:text-4xl font-bold mb-4"
             >
               Our Expert Instructors
             </motion.h1>
