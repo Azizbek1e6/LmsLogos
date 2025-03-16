@@ -27,7 +27,7 @@ const Header = () => {
       <div className="container flex items-center justify-between h-16 px-4 mx-auto">
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          <span className="text-2xl font-bold text-primary">EduPress</span>
+          <span className="text-2xl font-bold text-primary">Logos</span>
         </Link>
 
         {/* Navigation */}
@@ -46,7 +46,7 @@ const Header = () => {
             className="text-sm font-medium hover:text-primary w-full md:w-auto"
             onClick={() => setIsMenuOpen(false)}
           >
-            Instructors
+            Teachers
           </Link>
           <Link
             to="/about"
