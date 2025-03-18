@@ -7,6 +7,7 @@ import HeroSection from "./home/HeroSection";
 import CourseGrid from "./courses/CourseGrid";
 import StatisticsSection from "./home/StatisticsSection";
 import TestimonialCarousel from "./home/TestimonialCarousel";
+import { DemoModeBanner } from "./ui/demo-mode-banner";
 
 const CallToAction = () => {
   return (
@@ -37,6 +38,9 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <div className="container mx-auto px-4 pt-4">
+        <DemoModeBanner />
+      </div>
       <main>
         <HeroSection />
         <CourseGrid />

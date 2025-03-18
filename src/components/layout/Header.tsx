@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { ThemeToggle } from "../ui/theme-toggle";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/types/user";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -115,11 +116,16 @@ const Header = () => {
           <div className="flex items-center space-x-2">
             {isAuthenticated ? (
               <div className="flex items-center space-x-2">
+                {(user?.role === "TEACHER" || user?.role === "ADMIN") && (
+                  <Link to="/teacher/create-course">
+                    <Button variant="ghost">Create Course</Button>
+                  </Link>
+                )}
                 <Link
                   to={
-                    user?.role === "admin"
+                    user?.role === "ADMIN"
                       ? "/admin"
-                      : user?.role === "teacher"
+                      : user?.role === "TEACHER"
                         ? "/teacher/dashboard"
                         : "/dashboard"
                   }

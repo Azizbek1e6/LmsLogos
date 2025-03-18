@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, UserRole } from "@/types/user";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
+import { supabase, isUsingMockData } from "@/lib/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -118,6 +118,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      if (isUsingMockData) {
+        // Mock login for demo purposes
+        const mockUser: User = {
+          id: "mock-user-id",
+          email: email,
+          fullName: email.split("@")[0],
+          role: email.includes("admin")
+            ? UserRole.ADMIN
+            : email.includes("teacher")
+              ? UserRole.TEACHER
+              : UserRole.STUDENT,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+          emailVerified: true,
+        };
+        setUser(mockUser);
+        toast({
+          title: "Demo Login",
+          description:
+            "Logged in with mock data. Set up Supabase for real authentication.",
+        });
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -125,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (error) throw error;
 
-      if (data.user) {
+      if (data?.user) {
         toast({
           title: "Login successful",
           description: "Welcome back!",
@@ -152,6 +177,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     setIsLoading(true);
     try {
+      if (isUsingMockData) {
+        // Mock signup for demo purposes
+        const mockUser: User = {
+          id: `mock-user-${Date.now()}`,
+          email: email,
+          fullName: fullName,
+          role: role,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+          emailVerified: false,
+        };
+        setUser(mockUser);
+        toast({
+          title: "Demo Account Created",
+          description:
+            "Account created with mock data. Set up Supabase for real authentication.",
+        });
+        return;
+      }
+
       // 1. Sign up the user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -166,7 +212,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (authError) throw authError;
 
-      if (authData.user) {
+      if (authData?.user) {
         // 2. Create a profile record in the profiles table
         const { error: profileError } = await supabase.from("profiles").insert({
           user_id: authData.user.id,

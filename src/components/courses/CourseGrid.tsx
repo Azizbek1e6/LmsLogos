@@ -24,18 +24,48 @@ const CourseGrid = ({
   const [courses, setCourses] = useState<Course[]>(initialCourses || []);
   const [isLoading, setIsLoading] = useState(!initialCourses);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    category || null,
+  );
+
+  // Fetch all available categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const allCourses = await courseService.getAllCourses();
+        const uniqueCategories = Array.from(
+          new Set(allCourses.map((course) => course.category)),
+        );
+        setCategories(uniqueCategories);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Handle category selection
+  const handleCategorySelect = (cat: string | null) => {
+    setSelectedCategory(cat);
+    // Reset courses when changing category to trigger a new fetch
+    if (!initialCourses) {
+      setCourses([]);
+    }
+  };
 
   useEffect(() => {
     // Only fetch from the database if courses weren't provided as props
-    if (!initialCourses) {
+    if (!initialCourses || selectedCategory !== category) {
       const fetchCourses = async () => {
         try {
           setIsLoading(true);
           setError(null);
           let data;
 
-          if (category) {
-            data = await courseService.getCoursesByCategory(category);
+          if (selectedCategory) {
+            data = await courseService.getCoursesByCategory(selectedCategory);
           } else {
             data = await courseService.getAllCourses();
           }
@@ -47,7 +77,7 @@ const CourseGrid = ({
           console.error("Error fetching courses:", err);
           setError("Failed to load courses. Please try again later.");
           // Set default courses on error
-          setCourses([
+          const mockCourses = [
             {
               id: "course-1",
               title: "Complete Web Development Bootcamp",
@@ -87,7 +117,16 @@ const CourseGrid = ({
                 "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&q=80",
               bestseller: false,
             },
-          ]);
+          ];
+
+          // Filter mock courses by category if a category is selected
+          const filteredMockCourses = selectedCategory
+            ? mockCourses.filter(
+                (course) => course.category === selectedCategory,
+              )
+            : mockCourses;
+
+          setCourses(filteredMockCourses);
         } finally {
           setIsLoading(false);
         }
@@ -95,7 +134,7 @@ const CourseGrid = ({
 
       fetchCourses();
     }
-  }, [initialCourses, category, limit]);
+  }, [initialCourses, category, limit, selectedCategory]);
 
   return (
     <section className="py-16 bg-background">
@@ -104,6 +143,29 @@ const CourseGrid = ({
           <h2 className="text-3xl font-bold mb-4">{title}</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">{subtitle}</p>
         </div>
+
+        {/* Category filter buttons */}
+        {categories.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 mb-8">
+            <Button
+              variant={!selectedCategory ? "default" : "outline"}
+              onClick={() => handleCategorySelect(null)}
+              className="mb-2"
+            >
+              All Categories
+            </Button>
+            {categories.map((cat) => (
+              <Button
+                key={cat}
+                variant={selectedCategory === cat ? "default" : "outline"}
+                onClick={() => handleCategorySelect(cat)}
+                className="mb-2"
+              >
+                {cat}
+              </Button>
+            ))}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">

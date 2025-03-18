@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase, isUsingMockData } from "@/lib/supabase";
 import { mockCourses } from "./mockData";
 
 export interface Course {
@@ -21,40 +21,41 @@ export interface Course {
 export const courseService = {
   async getAllCourses(): Promise<Course[]> {
     try {
-      // Try to fetch from Supabase
-      try {
-        const { data, error } = await supabase
-          .from("courses")
-          .select(
-            `
-            *,
-            profiles:instructor_id (full_name)
-          `,
-          )
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        if (data && data.length > 0) {
-          return data.map((course) => ({
-            id: course.id,
-            title: course.title,
-            description: course.description,
-            instructor: course.profiles.full_name,
-            instructorId: course.instructor_id,
-            rating: course.rating,
-            reviewCount: course.review_count,
-            price: course.price,
-            originalPrice: course.original_price,
-            category: course.category,
-            image: course.image,
-            bestseller: course.bestseller,
-          }));
-        }
-      } catch (supabaseError) {
-        console.error("Error fetching courses:", supabaseError);
+      // If we're using mock data, return it directly without trying Supabase
+      if (isUsingMockData) {
+        return mockCourses;
       }
 
-      // Return mock data if Supabase fails
+      // Try to fetch from Supabase
+      const { data, error } = await supabase
+        .from("courses")
+        .select(
+          `
+          *,
+          profiles:instructor_id (full_name)
+        `,
+        )
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        return data.map((course) => ({
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          instructor: course.profiles.full_name,
+          instructorId: course.instructor_id,
+          rating: course.rating,
+          reviewCount: course.review_count,
+          price: course.price,
+          originalPrice: course.original_price,
+          category: course.category,
+          image: course.image,
+          bestseller: course.bestseller,
+        }));
+      }
+
+      // Return mock data if no results from Supabase
       return mockCourses;
     } catch (error) {
       console.error("Error fetching courses:", error);
