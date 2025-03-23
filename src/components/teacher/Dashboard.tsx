@@ -23,11 +23,13 @@ import {
   Menu,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const TeacherDashboard = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const stats = [
     {
@@ -61,55 +63,64 @@ const TeacherDashboard = () => {
         </div>
         <div className="flex flex-col justify-between flex-1 overflow-y-auto">
           <nav className="flex-1 px-2 py-4 space-y-1">
-            <Link
-              to="/teacher/dashboard"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            >
-              <BookOpen className="mr-3 h-5 w-5" />
-              Dashboard
-            </Link>
-            <Link
-              to="/teacher/courses"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <FileText className="mr-3 h-5 w-5" />
-              My Courses
-            </Link>
-            <Link
-              to="/teacher/students"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <Users className="mr-3 h-5 w-5" />
-              My Students
-            </Link>
-            <Link
-              to="/teacher/discussions"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <MessageSquare className="mr-3 h-5 w-5" />
-              Discussions
-            </Link>
-            <Link
-              to="/teacher/earnings"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <DollarSign className="mr-3 h-5 w-5" />
-              Earnings
-            </Link>
-            <Link
-              to="/teacher/settings"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <Settings className="mr-3 h-5 w-5" />
-              Settings
-            </Link>
-            <Link
-              to="/teacher/help"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <HelpCircle className="mr-3 h-5 w-5" />
-              Help & Support
-            </Link>
+            {[
+              {
+                path: "/teacher/dashboard",
+                label: "Dashboard",
+                icon: <BookOpen className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/teacher/courses",
+                label: "My Courses",
+                icon: <FileText className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/teacher/students",
+                label: "My Students",
+                icon: <Users className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/teacher/discussions",
+                label: "Discussions",
+                icon: <MessageSquare className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/teacher/earnings",
+                label: "Earnings",
+                icon: <DollarSign className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/teacher/settings",
+                label: "Settings",
+                icon: <Settings className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/teacher/help",
+                label: "Help & Support",
+                icon: <HelpCircle className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/teacher/create-course",
+                label: "Create Course",
+                icon: <PlusCircle className="mr-3 h-5 w-5" />,
+              },
+            ].map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                    isActive
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center">
@@ -133,7 +144,10 @@ const TeacherDashboard = () => {
             <Button
               variant="ghost"
               className="mt-4 w-full justify-start text-gray-600 dark:text-gray-300"
-              onClick={logout}
+              onClick={() => {
+                logout();
+                navigate("/login");
+              }}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Sign out

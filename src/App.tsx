@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useRoutes } from "react-router-dom";
 import routes from "tempo-routes";
 import Home from "@/components/home";
 import Courses from "@/pages/Courses";
@@ -13,6 +13,10 @@ import LessonView from "@/pages/LessonView";
 import AppRoutes from "@/routes";
 
 function App() {
+  // Handle Tempo routes directly in App component
+  const tempoRoutesElement =
+    import.meta.env.VITE_TEMPO === "true" ? useRoutes(routes) : null;
+
   return (
     <Suspense
       fallback={
@@ -21,10 +25,8 @@ function App() {
         </div>
       }
     >
-      {/* Use the AppRoutes component which contains all routes */}
-      <AppRoutes />
-
-      {/* Tempo routes will be handled inside AppRoutes */}
+      {/* Render Tempo routes if available */}
+      {tempoRoutesElement !== null ? tempoRoutesElement : <AppRoutes />}
     </Suspense>
   );
 }

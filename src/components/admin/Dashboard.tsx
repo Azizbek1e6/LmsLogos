@@ -31,10 +31,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Mock data for dashboard
   const stats = [
@@ -169,55 +171,59 @@ const Dashboard = () => {
         </div>
         <div className="flex flex-col justify-between flex-1 overflow-y-auto">
           <nav className="flex-1 px-2 py-4 space-y-1">
-            <Link
-              to="/admin"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            >
-              <BarChart className="mr-3 h-5 w-5" />
-              Dashboard
-            </Link>
-            <Link
-              to="/admin/users"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <Users className="mr-3 h-5 w-5" />
-              Users
-            </Link>
-            <Link
-              to="/admin/teachers"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <GraduationCap className="mr-3 h-5 w-5" />
-              Teacher Approval
-            </Link>
-            <Link
-              to="/admin/courses"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <BookOpen className="mr-3 h-5 w-5" />
-              Courses
-            </Link>
-            <Link
-              to="/admin/instructors"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <GraduationCap className="mr-3 h-5 w-5" />
-              Instructors
-            </Link>
-            <Link
-              to="/admin/reports"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <FileText className="mr-3 h-5 w-5" />
-              Reports
-            </Link>
-            <Link
-              to="/admin/settings"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <Settings className="mr-3 h-5 w-5" />
-              Settings
-            </Link>
+            {[
+              {
+                path: "/admin",
+                label: "Dashboard",
+                icon: <BarChart className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/admin/users",
+                label: "Users",
+                icon: <Users className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/admin/teachers",
+                label: "Teacher Approval",
+                icon: <GraduationCap className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/admin/courses",
+                label: "Courses",
+                icon: <BookOpen className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/admin/instructors",
+                label: "Instructors",
+                icon: <GraduationCap className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/admin/reports",
+                label: "Reports",
+                icon: <FileText className="mr-3 h-5 w-5" />,
+              },
+              {
+                path: "/admin/settings",
+                label: "Settings",
+                icon: <Settings className="mr-3 h-5 w-5" />,
+              },
+            ].map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                    isActive
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center">
@@ -241,7 +247,10 @@ const Dashboard = () => {
             <Button
               variant="ghost"
               className="mt-4 w-full justify-start text-gray-600 dark:text-gray-300"
-              onClick={logout}
+              onClick={() => {
+                logout();
+                navigate("/login");
+              }}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Sign out

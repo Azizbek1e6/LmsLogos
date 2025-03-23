@@ -1,5 +1,11 @@
 import React, { lazy, Suspense } from "react";
-import { Routes, Route, useLocation, useRoutes } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  useLocation,
+  useRoutes,
+  useSearchParams,
+} from "react-router-dom";
 import { UserRole } from "@/types/user";
 import routes from "tempo-routes";
 
@@ -18,6 +24,7 @@ const Instructors = lazy(() => import("@/pages/Instructors"));
 const LessonView = lazy(() => import("@/pages/LessonView"));
 const CreateQuiz = lazy(() => import("@/pages/CreateQuiz"));
 const TakeQuiz = lazy(() => import("@/pages/TakeQuiz"));
+const TeacherDashboard = lazy(() => import("@/components/teacher/Dashboard"));
 
 // Admin pages
 const AdminDashboard = lazy(() => import("@/pages/admin"));
@@ -66,6 +73,15 @@ import { Navigate } from "react-router-dom";
 import AdminTeachersPage from "@/pages/admin/teachers";
 import CreateCoursePage from "@/pages/teacher/CreateCourse";
 
+// Wrapper for Courses component to handle search params
+const CoursesWithSearch = () => {
+  const [searchParams] = useSearchParams();
+  const search = searchParams.get("search") || "";
+  const category = searchParams.get("category") || "";
+
+  return <Courses search={search} category={category} />;
+};
+
 const AppRoutes = () => {
   const location = useLocation();
 
@@ -84,7 +100,7 @@ const AppRoutes = () => {
       <Routes location={location} key={location.pathname}>
         {/* Public routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/courses" element={<Courses />} />
+        <Route path="/courses" element={<CoursesWithSearch />} />
         <Route path="/course/:id" element={<CourseDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -92,7 +108,72 @@ const AppRoutes = () => {
         <Route path="/about" element={<About />} />
         <Route path="/instructors" element={<Instructors />} />
         <Route path="/dashboard" element={<Home />} />
-        <Route path="/teacher/dashboard" element={<Home />} />
+
+        {/* Teacher routes */}
+        <Route
+          path="/teacher/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/create-course"
+          element={
+            <ProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+              <CreateCoursePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/courses"
+          element={
+            <ProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/students"
+          element={
+            <ProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/discussions"
+          element={
+            <ProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/earnings"
+          element={
+            <ProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/settings"
+          element={
+            <ProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/help"
+          element={
+            <ProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Course and lesson routes */}
         <Route
@@ -132,28 +213,55 @@ const AppRoutes = () => {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="teachers" element={<AdminTeachersPage />} />
+          <Route
+            path="courses"
+            element={
+              <div className="p-6">
+                <h1 className="text-2xl font-bold mb-4">Course Management</h1>
+              </div>
+            }
+          />
+          <Route
+            path="instructors"
+            element={
+              <div className="p-6">
+                <h1 className="text-2xl font-bold mb-4">
+                  Instructor Management
+                </h1>
+              </div>
+            }
+          />
+          <Route
+            path="reports"
+            element={
+              <div className="p-6">
+                <h1 className="text-2xl font-bold mb-4">Reports</h1>
+              </div>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <div className="p-6">
+                <h1 className="text-2xl font-bold mb-4">Settings</h1>
+              </div>
+            }
+          />
+          <Route
+            path="profile"
+            element={
+              <div className="p-6">
+                <h1 className="text-2xl font-bold mb-4">Admin Profile</h1>
+              </div>
+            }
+          />
           {/* Add more admin routes as needed */}
         </Route>
-
-        {/* Add routes for pages that were showing 'No routes matched location' errors */}
-        <Route path="/about" element={<About />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
 
         {/* Allow tempo to capture routes */}
         {import.meta.env.VITE_TEMPO === "true" && (
           <Route path="/tempobook/*" element={<div />} />
         )}
-
-        {/* Teacher routes */}
-        <Route
-          path="/teacher/create-course"
-          element={
-            <ProtectedRoute allowedRoles={["TEACHER", "ADMIN"]}>
-              <CreateCoursePage />
-            </ProtectedRoute>
-          }
-        />
 
         {/* Student routes */}
         {/* <Route path="/dashboard" element={
@@ -161,6 +269,9 @@ const AppRoutes = () => {
             <StudentDashboard />
           </ProtectedRoute>
         }/> */}
+
+        {/* Catch-all route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );
