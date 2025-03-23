@@ -135,6 +135,11 @@ const AppRoutes = () => {
           {/* Add more admin routes as needed */}
         </Route>
 
+        {/* Add routes for pages that were showing 'No routes matched location' errors */}
+        <Route path="/about" element={<About />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
         {/* Allow tempo to capture routes */}
         {import.meta.env.VITE_TEMPO === "true" && (
           <Route path="/tempobook/*" element={<div />} />

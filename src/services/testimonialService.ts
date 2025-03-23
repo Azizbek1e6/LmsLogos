@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase, isUsingMockData } from "@/lib/supabase";
 import { mockTestimonials } from "./mockData";
 
 export interface Testimonial {
@@ -13,34 +13,35 @@ export interface Testimonial {
 export const testimonialService = {
   async getAllTestimonials(): Promise<Testimonial[]> {
     try {
-      // Try to fetch from Supabase
-      try {
-        const { data, error } = await supabase
-          .from("testimonials")
-          .select(
-            `
-            *,
-            profiles:user_id (full_name, role, avatar_url)
-          `,
-          )
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        if (data && data.length > 0) {
-          return data.map((testimonial) => ({
-            id: testimonial.id,
-            name: testimonial.profiles.full_name,
-            role: testimonial.profiles.role,
-            content: testimonial.content,
-            avatar: testimonial.profiles.avatar_url,
-            rating: testimonial.rating,
-          }));
-        }
-      } catch (supabaseError) {
-        console.error("Error fetching testimonials:", supabaseError);
+      // If we're using mock data, return it directly without trying Supabase
+      if (isUsingMockData) {
+        return mockTestimonials;
       }
 
-      // Return mock data if Supabase fails
+      // Try to fetch from Supabase
+      const { data, error } = await supabase
+        .from("testimonials")
+        .select(
+          `
+          *,
+          profiles:user_id (full_name, role, avatar_url)
+        `,
+        )
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        return data.map((testimonial) => ({
+          id: testimonial.id,
+          name: testimonial.profiles.full_name,
+          role: testimonial.profiles.role,
+          content: testimonial.content,
+          avatar: testimonial.profiles.avatar_url,
+          rating: testimonial.rating,
+        }));
+      }
+
+      // Return mock data if no results from Supabase
       return mockTestimonials;
     } catch (error) {
       console.error("Error fetching testimonials:", error);

@@ -4,8 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { isUsingMockData } from "@/lib/supabase";
 
 export function DemoModeBanner() {
-  if (!isUsingMockData) return null;
-
+  // Always show the banner in this version
   return (
     <Alert
       variant="warning"
@@ -16,9 +15,11 @@ export function DemoModeBanner() {
         Demo Mode Active
       </AlertTitle>
       <AlertDescription className="text-yellow-600 dark:text-yellow-400">
-        This application is running in demo mode with mock data. To enable full
-        functionality, please set up your Supabase credentials in the
-        environment variables.
+        <p>This application is running in demo mode with mock data.</p>
+        <p className="mt-1">
+          You can log in with any email/password. Use emails containing "admin"
+          or "teacher" for those roles.
+        </p>
       </AlertDescription>
     </Alert>
   );
